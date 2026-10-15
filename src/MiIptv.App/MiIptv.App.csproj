@@ -14,7 +14,20 @@
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DebugType>none</DebugType>
+    <!-- El paquete VideoLAN.LibVLC.Windows no lleva sus DLLs a publish/ por sí solo:
+         desactivamos su copia automática y la declaramos explícita abajo. -->
+    <VlcWindowsX64Enabled>false</VlcWindowsX64Enabled>
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DLLs nativas de VLC (x64) junto al exe -->
+    <Content Include="$(PkgVideoLAN_LibVLC_Windows)\build\x64\**">
+      <Link>libvlc\win-x64\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="LibVLCSharp.WPF" Version="3.8.1" />

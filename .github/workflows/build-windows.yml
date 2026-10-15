@@ -29,6 +29,13 @@ jobs:
       - name: Publicar exe portable
         run: dotnet publish src/MiIptv.App/MiIptv.App.csproj -c Release -o publish
 
+      - name: Verificar DLLs nativas de VLC
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "publish/libvlc/win-x64/libvlc.dll")) { throw "FALTA publish/libvlc/win-x64/libvlc.dll" }
+          if (-not (Test-Path "publish/libvlc/win-x64/plugins")) { throw "FALTA publish/libvlc/win-x64/plugins" }
+          Write-Host "libvlc OK"
+
       - name: Zip con numero de version
         shell: pwsh
         run: |
