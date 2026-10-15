@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>0.1.7</Version>
+    <Version>0.1.8</Version>
     <AssemblyName>mi-iptv-native</AssemblyName>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <!-- Portable sin instalador: carpeta con el exe + piezas de VLC al lado.
