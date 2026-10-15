@@ -4,7 +4,7 @@ Reproductor IPTV portable para Windows, **nativo** (sin motor web): C# + WPF con
 **LibVLCSharp** (motor de VLC) como reproductor. Reproduce todo lo que VLC
 reproduce: HLS, MPEG-TS, MP4/MKV, HEVC/H.265, AC3/DTS, etc.
 
-- Un solo `.exe` portable (self-contained); la configuración vive en `data\` junto al exe.
+- Carpeta portable (self-contained, sin instalador): el exe con las piezas de VLC al lado; la configuración vive en `data\` junto al exe.
 - Fuentes: Xtream Codes y listas m3u/m3u8.
 - Interfaz en español, tema oscuro.
 
