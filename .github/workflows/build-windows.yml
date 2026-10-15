@@ -42,15 +42,18 @@ jobs:
       - name: Ordenar carpeta (DLLs a libs)
         shell: pwsh
         run: |
-          # DLLs gestionadas -> libs\ (menos la de entrada y CoreLib, que el runtime exige al lado del exe)
-          $keep = @('mi-iptv-native.dll', 'System.Private.CoreLib.dll')
+          # Todo *.dll -> libs\, MENOS lo que el arranque del runtime exige al lado del exe:
+          # - mi-iptv-native.dll: la busca el exe por nombre
+          # - System.Private.CoreLib.dll: se necesita antes de que corra código gestionado
+          # - hostfxr/hostpolicy/coreclr/clrjit/clrgc/clretwrc: cadena del host nativo
+          $keep = @('mi-iptv-native.dll','System.Private.CoreLib.dll',
+                    'hostfxr.dll','hostpolicy.dll','coreclr.dll','clrjit.dll','clrgc.dll','clretwrc.dll')
           $moved = @{}
           New-Item -ItemType Directory -Force -Path "publish\libs" | Out-Null
           Get-ChildItem "publish\*.dll" | ForEach-Object {
             if ($keep -contains $_.Name) { return }
-            $managed = $true
-            try { [void][System.Reflection.AssemblyName]::GetAssemblyName($_.FullName) } catch { $managed = $false }
-            if ($managed) { Move-Item $_.FullName "publish\libs\" -Force; $moved[$_.Name] = $true }
+            Move-Item $_.FullName "publish\libs\" -Force
+            $moved[$_.Name] = $true
           }
           # Satélites de idioma -> libs\<cultura>\
           Get-ChildItem "publish\" -Directory | Where-Object { $_.Name -notin @('libs','libvlc') } |
@@ -83,7 +86,7 @@ jobs:
           $libsDlls = @(Get-ChildItem "publish\libs\*.dll").Count
           Write-Host "Raíz: $rootFiles archivos; libs: $libsDlls DLLs"
           if ($libsDlls -lt 30) { throw "libs\ casi vacío ($libsDlls)" }
-          if ($rootFiles -gt 30) { throw "demasiados archivos en raíz ($rootFiles)" }
+          if ($rootFiles -gt 20) { throw "demasiados archivos en raíz ($rootFiles)" }
           if (-not (Test-Path "publish\libvlc\win-x64\libvlc.dll")) { throw "falta libvlc" }
           if (-not (Test-Path "publish\mi-iptv-native.exe")) { throw "falta exe" }
 
