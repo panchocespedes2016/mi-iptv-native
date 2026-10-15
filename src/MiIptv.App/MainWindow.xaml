@@ -1,0 +1,32 @@
+<Window x:Class="MiIptv.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MiIPTV" Height="720" Width="1280"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Fg}"
+        WindowStartupLocation="CenterScreen">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="230"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <!-- Barra lateral -->
+    <StackPanel Grid.Column="0" Background="{StaticResource Panel}">
+      <TextBlock Text="MiIPTV" FontSize="22" FontWeight="Bold" Margin="16,16,16,2"/>
+      <TextBlock x:Name="SourceLabel" Text="Fuente: —" Foreground="{StaticResource Muted}"
+                 FontSize="12" Margin="16,0,16,12"/>
+      <Button x:Name="NavLive" Content="📡 TV en vivo" Click="Nav_Click" Tag="live"/>
+      <Button x:Name="NavEpg" Content="🗓 Guía" Click="Nav_Click" Tag="epg"/>
+      <Button x:Name="NavMovies" Content="🎬 Películas" Click="Nav_Click" Tag="movies"/>
+      <Button x:Name="NavSeries" Content="📺 Series" Click="Nav_Click" Tag="series"/>
+      <Button x:Name="NavFavs" Content="⭐ Favoritos" Click="Nav_Click" Tag="favs"/>
+      <Button x:Name="NavMulti" Content="⊞ Multivista" Click="Nav_Click" Tag="multi"/>
+      <Button x:Name="NavSettings" Content="⚙ Ajustes" Click="Nav_Click" Tag="settings"/>
+      <TextBlock x:Name="VersionLabel" Text="v…" Foreground="{StaticResource Muted}"
+                 FontSize="12" Margin="16,8" VerticalAlignment="Bottom"/>
+    </StackPanel>
+
+    <!-- Contenido -->
+    <ContentControl Grid.Column="1" x:Name="MainContent" Margin="12"/>
+  </Grid>
+</Window>
