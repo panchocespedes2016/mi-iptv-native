@@ -1,0 +1,38 @@
+<UserControl x:Class="MiIptv.App.Views.LiveView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="UserControl_Loaded">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="320"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <DockPanel Grid.Column="0">
+      <TextBox x:Name="SearchBox" DockPanel.Dock="Top" TextChanged="Search_Changed"
+               Margin="4"/>
+      <ScrollViewer DockPanel.Dock="Top" MaxHeight="110" VerticalScrollBarVisibility="Auto">
+        <WrapPanel x:Name="CatPanel" Margin="4"/>
+      </ScrollViewer>
+      <ListBox x:Name="ChannelList" SelectionChanged="Channel_Activated">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal" Margin="2">
+              <Image Source="{Binding Logo}" Width="44" Height="44" Margin="0,0,10,0"/>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                <TextBlock Text="{Binding Group}" Foreground="{StaticResource Muted}" FontSize="12"/>
+              </StackPanel>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+      <TextBlock Text="📡" FontSize="64" HorizontalAlignment="Center" Opacity="0.3"/>
+      <TextBlock x:Name="HintLabel" Text="Elige un canal de la lista"
+                 FontSize="18" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

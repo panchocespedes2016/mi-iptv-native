@@ -32,7 +32,7 @@ public partial class MainWindow : Window
         MainContent.Content = tag switch
         {
             "settings" => new SettingsView(),
-            "live" => Placeholder("📡 TV en vivo", "Etapa 3: lista de canales + reproductor VLC."),
+            "live" => new LiveView(),
             "epg" => Placeholder("🗓 Guía", "Etapa 4: parrilla EPG."),
             "movies" => Placeholder("🎬 Películas", "Etapa 5: catálogo VOD."),
             "series" => Placeholder("📺 Series", "Etapa 5: catálogo de series."),
