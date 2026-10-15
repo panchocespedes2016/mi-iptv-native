@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
@@ -6,48 +8,75 @@ using System.Runtime.Loader;
 namespace MiIptv.App;
 
 /// <summary>
-/// Las DLLs (gestionadas y nativas de WPF/diagnóstico) viven en la subcarpeta "libs\".
-/// Este inicializador de módulo se ejecuta antes que Main y redirige la
-/// resolución de ensamblados y de librerías nativas hacia libs\.
-/// Al lado del exe solo queda lo que el arranque del runtime exige ahí:
-/// exe, dll de entrada, jsons, la cadena del host (hostfxr/hostpolicy/coreclr/…)
-/// y System.Private.CoreLib.
+/// Las DLLs (gestionadas y nativas) viven en la subcarpeta "libs\".
+/// Este inicializador de módulo corre antes que Main y:
+///  1) precarga los ensamblados de libs\ en el contexto por defecto, y
+///  2) registra redireccionadores (gestionados y nativos) como respaldo.
+/// Al lado del exe solo queda lo que el arranque del runtime exige ahí.
 /// </summary>
 internal static class StartupHook
 {
+    private static string? _log;
+
     [ModuleInitializer]
     internal static void Init()
     {
-        var baseDir = AppContext.BaseDirectory;
-        var libsDir = Path.Combine(baseDir, "libs");
-        if (!Directory.Exists(libsDir)) return;
-
-        string[]? subDirs = null;
-
-        // Ensamblados gestionados -> libs\*.dll y libs\<idioma>\*.resources.dll
-        AssemblyLoadContext.Default.Resolving += (context, name) =>
+        try
         {
-            if (string.IsNullOrEmpty(name.Name)) return null;
+            var baseDir = AppContext.BaseDirectory;
+            _log = Path.Combine(baseDir, "startup.log");
+            var libsDir = Path.Combine(baseDir, "libs");
+            Log($"Init baseDir={baseDir} libsExists={Directory.Exists(libsDir)}");
+            if (!Directory.Exists(libsDir)) return;
 
-            var direct = Path.Combine(libsDir, name.Name + ".dll");
-            if (File.Exists(direct))
-                return context.LoadFromAssemblyPath(direct);
-
-            subDirs ??= Directory.GetDirectories(libsDir);
-            foreach (var sub in subDirs)
+            // 1) Precarga: evita depender del evento de resolución.
+            int ok = 0, skip = 0;
+            foreach (var dll in Directory.GetFiles(libsDir, "*.dll"))
             {
-                var sat = Path.Combine(sub, name.Name + ".dll");
-                if (File.Exists(sat))
-                    return context.LoadFromAssemblyPath(sat);
+                try
+                {
+                    AssemblyName.GetAssemblyName(dll); // filtra nativas (lanza excepción)
+                    AssemblyLoadContext.Default.LoadFromAssemblyPath(dll);
+                    ok++;
+                }
+                catch (Exception ex) { skip++; Log($"skip {Path.GetFileName(dll)}: {ex.GetType().Name}"); }
             }
-            return null;
-        };
+            Log($"Precarga: {ok} ok, {skip} omitidos");
 
-        // Librerías nativas (D3DCompiler, PresentationNative, …) -> libs\*.dll
-        AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) =>
+            // 2) Respaldo: redireccionadores por si algo se pide después.
+            string[]? subDirs = null;
+            AssemblyLoadContext.Default.Resolving += (context, name) =>
+            {
+                Log($"Resolving {name?.Name}");
+                if (string.IsNullOrEmpty(name?.Name)) return null;
+                var direct = Path.Combine(libsDir, name.Name + ".dll");
+                if (File.Exists(direct))
+                    return context.LoadFromAssemblyPath(direct);
+                subDirs ??= Directory.GetDirectories(libsDir);
+                foreach (var sub in subDirs)
+                {
+                    var sat = Path.Combine(sub, name.Name + ".dll");
+                    if (File.Exists(sat))
+                        return context.LoadFromAssemblyPath(sat);
+                }
+                return null;
+            };
+
+            AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) =>
+            {
+                var candidate = Path.Combine(libsDir, name + ".dll");
+                return File.Exists(candidate) ? NativeLibrary.Load(candidate) : IntPtr.Zero;
+            };
+            Log("Handlers registrados");
+        }
+        catch (Exception ex)
         {
-            var candidate = Path.Combine(libsDir, name + ".dll");
-            return File.Exists(candidate) ? NativeLibrary.Load(candidate) : IntPtr.Zero;
-        };
+            try { File.AppendAllText(_log ?? "startup.log", "Init ERROR: " + ex + "\n"); } catch { }
+        }
+    }
+
+    private static void Log(string msg)
+    {
+        try { if (_log != null) File.AppendAllText(_log, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}\n"); } catch { }
     }
 }
