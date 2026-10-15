@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <PackageReference Include="LibVLCSharp.WPF" Version="3.8.1" />
+    <!-- Nativos de VLC: referencia directa (LibVLCSharp no la trae transitiva) -->
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
   </ItemGroup>
 
   <ItemGroup>
