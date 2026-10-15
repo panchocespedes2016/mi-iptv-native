@@ -3,15 +3,18 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
 
 namespace MiIptv.App;
 
 /// <summary>
 /// Las DLLs (gestionadas y nativas) viven en la subcarpeta "libs\".
 /// Este hook se llama desde Program.Main ANTES de tocar cualquier tipo WPF.
-/// Todo lo que ejecuta Init() usa solo tipos de System.Private.CoreLib para
-/// no requerir ensamblados de libs\ antes de que el redireccionador exista.
+/// IMPORTANTE: todo lo que ejecuta Init() usa SOLO tipos de System.Private.CoreLib.
+/// (Ni AssemblyLoadContext ni NativeLibrary: viven en otros ensamblados que
+/// estarían en libs\ y no se podrían resolver antes de que el hook exista.)
+/// - Gestionadas: se resuelven con AppDomain.AssemblyResolve (CoreLib).
+/// - Nativas: se precargan con LoadLibrary de kernel32 (el SO las encuentra
+///   después para los DllImport).
 /// </summary>
 internal static class StartupHook
 {
@@ -30,47 +33,44 @@ internal static class StartupHook
             Log($"Init baseDir={baseDir} libsExists={Directory.Exists(libsDir)}");
             if (!Directory.Exists(libsDir)) return;
 
-            // 1) Precarga de ensamblados gestionados de libs\.
-            int ok = 0, skip = 0;
+            // Nativas de libs\: precargarlas para que los DllImport las encuentren.
+            int nat = 0;
             foreach (var dll in Directory.GetFiles(libsDir, "*.dll"))
+            {
+                bool managed;
+                try { AssemblyName.GetAssemblyName(dll); managed = true; }
+                catch { managed = false; }
+                if (managed) continue;
+                try
+                {
+                    if (LoadLibraryNative(dll) != IntPtr.Zero) nat++;
+                    else Log($"LoadLibrary falló: {Path.GetFileName(dll)}");
+                }
+                catch (Exception ex) { Log($"LoadLibrary ex {Path.GetFileName(dll)}: {ex.GetType().Name}"); }
+            }
+            Log($"Nativas precargadas: {nat}");
+
+            // Gestionadas: resolver bajo demanda desde libs\ (y subcarpetas de idioma).
+            string[]? subDirs = null;
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 try
                 {
-                    AssemblyName.GetAssemblyName(dll); // filtra nativas
-                    AssemblyLoadContext.Default.LoadFromAssemblyPath(dll);
-                    ok++;
+                    var name = new AssemblyName(args.Name).Name;
+                    if (string.IsNullOrEmpty(name)) return null;
+                    var direct = Path.Combine(libsDir, name + ".dll");
+                    if (File.Exists(direct)) return Assembly.LoadFrom(direct);
+                    subDirs ??= Directory.GetDirectories(libsDir);
+                    foreach (var sub in subDirs)
+                    {
+                        var sat = Path.Combine(sub, name + ".dll");
+                        if (File.Exists(sat)) return Assembly.LoadFrom(sat);
+                    }
                 }
-                catch (Exception ex) { skip++; Log($"skip {Path.GetFileName(dll)}: {ex.GetType().Name}"); }
-            }
-            Log($"Precarga: {ok} ok, {skip} omitidos");
-
-            // 2) Redireccionadores como respaldo.
-            string[]? subDirs = null;
-            AssemblyLoadContext.Default.Resolving += (context, name) =>
-            {
-                if (string.IsNullOrEmpty(name?.Name)) return null;
-                var direct = Path.Combine(libsDir, name.Name + ".dll");
-                if (File.Exists(direct))
-                    return context.LoadFromAssemblyPath(direct);
-                subDirs ??= Directory.GetDirectories(libsDir);
-                foreach (var sub in subDirs)
-                {
-                    var sat = Path.Combine(sub, name.Name + ".dll");
-                    if (File.Exists(sat))
-                        return context.LoadFromAssemblyPath(sat);
-                }
+                catch (Exception ex) { Log($"AssemblyResolve {args.Name}: {ex.GetType().Name}"); }
                 return null;
             };
-
-            AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) =>
-            {
-                var candidate = Path.Combine(libsDir, name + ".dll");
-                if (!File.Exists(candidate)) return IntPtr.Zero;
-                var h = LoadLibraryNative(candidate);
-                Log($"Unmanaged {name} -> {(h == IntPtr.Zero ? "FALLO" : "ok")}");
-                return h;
-            };
-            Log("Handlers registrados");
+            Log("AssemblyResolve registrado");
         }
         catch (Exception ex)
         {
