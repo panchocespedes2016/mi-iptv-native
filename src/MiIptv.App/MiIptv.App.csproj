@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <Version>0.1.12</Version>
     <AssemblyName>mi-iptv-native</AssemblyName>
+    <StartupObject>MiIptv.App.Program</StartupObject>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <!-- Portable sin instalador: carpeta con el exe; las DLLs gestionadas van
          en la subcarpeta libs\ (las resuelve StartupHook.cs). Junto al exe
