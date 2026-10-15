@@ -9,16 +9,17 @@ namespace MiIptv.App;
 
 /// <summary>
 /// Las DLLs (gestionadas y nativas) viven en la subcarpeta "libs\".
-/// Este inicializador de módulo corre antes que Main y:
-///  1) precarga los ensamblados de libs\ en el contexto por defecto, y
-///  2) registra redireccionadores (gestionados y nativos) como respaldo.
-/// Al lado del exe solo queda lo que el arranque del runtime exige ahí.
+/// Este hook se llama desde Program.Main ANTES de tocar cualquier tipo WPF.
+/// Todo lo que ejecuta Init() usa solo tipos de System.Private.CoreLib para
+/// no requerir ensamblados de libs\ antes de que el redireccionador exista.
 /// </summary>
 internal static class StartupHook
 {
     private static string? _log;
 
-    [ModuleInitializer]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr LoadLibraryNative(string lpFileName);
+
     internal static void Init()
     {
         try
@@ -29,13 +30,13 @@ internal static class StartupHook
             Log($"Init baseDir={baseDir} libsExists={Directory.Exists(libsDir)}");
             if (!Directory.Exists(libsDir)) return;
 
-            // 1) Precarga: evita depender del evento de resolución.
+            // 1) Precarga de ensamblados gestionados de libs\.
             int ok = 0, skip = 0;
             foreach (var dll in Directory.GetFiles(libsDir, "*.dll"))
             {
                 try
                 {
-                    AssemblyName.GetAssemblyName(dll); // filtra nativas (lanza excepción)
+                    AssemblyName.GetAssemblyName(dll); // filtra nativas
                     AssemblyLoadContext.Default.LoadFromAssemblyPath(dll);
                     ok++;
                 }
@@ -43,11 +44,10 @@ internal static class StartupHook
             }
             Log($"Precarga: {ok} ok, {skip} omitidos");
 
-            // 2) Respaldo: redireccionadores por si algo se pide después.
+            // 2) Redireccionadores como respaldo.
             string[]? subDirs = null;
             AssemblyLoadContext.Default.Resolving += (context, name) =>
             {
-                Log($"Resolving {name?.Name}");
                 if (string.IsNullOrEmpty(name?.Name)) return null;
                 var direct = Path.Combine(libsDir, name.Name + ".dll");
                 if (File.Exists(direct))
@@ -65,7 +65,10 @@ internal static class StartupHook
             AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) =>
             {
                 var candidate = Path.Combine(libsDir, name + ".dll");
-                return File.Exists(candidate) ? NativeLibrary.Load(candidate) : IntPtr.Zero;
+                if (!File.Exists(candidate)) return IntPtr.Zero;
+                var h = LoadLibraryNative(candidate);
+                Log($"Unmanaged {name} -> {(h == IntPtr.Zero ? "FALLO" : "ok")}");
+                return h;
             };
             Log("Handlers registrados");
         }

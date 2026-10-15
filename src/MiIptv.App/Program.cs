@@ -1,17 +1,24 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace MiIptv.App;
 
 /// <summary>
-/// Punto de entrada en una clase simple (sin dependencias WPF): así el
-/// inicializador de módulo de StartupHook (que redirige a libs\) se registra
-/// ANTES de que se cargue cualquier tipo de WPF. Si Main estuviera en App,
-/// el runtime cargaría PresentationFramework antes del redireccionador.
+/// Punto de entrada en una clase simple (sin dependencias WPF).
+/// Main solo toca tipos de CoreLib: primero registra el redireccionador a libs\
+/// y después, en un método separado (NoInlining), arranca WPF.
 /// </summary>
 public static class Program
 {
     [STAThread]
     public static void Main()
+    {
+        StartupHook.Init();
+        RunApp();
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void RunApp()
     {
         var app = new App();
         app.InitializeComponent();
