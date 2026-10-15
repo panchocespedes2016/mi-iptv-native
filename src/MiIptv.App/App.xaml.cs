@@ -1,3 +1,5 @@
+using System.IO;
+using System.Reflection;
 using System.Windows;
 using LibVLCSharp.Shared;
 
@@ -7,8 +9,38 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Motor de video VLC (nativo: todos los códecs)
-        LibVLCSharp.Shared.Core.Initialize();
+        AppDomain.CurrentDomain.UnhandledException += (_, a) =>
+            MessageBox.Show("Error inesperado:\n" + a.ExceptionObject, "MiIPTV",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        try
+        {
+            // Motor de video VLC (nativo: todos los códecs).
+            // En single-file, las DLLs nativas se extraen a un temporal al arrancar:
+            // hay que indicar la ruta explícitamente.
+            var dir = FindLibVlcDir();
+            if (dir is null) Core.Initialize();
+            else Core.Initialize(dir);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("No se pudo iniciar el motor de video:\n" + ex.Message,
+                "MiIPTV", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
         base.OnStartup(e);
+    }
+
+    private static string? FindLibVlcDir()
+    {
+        var candidates = new List<string>();
+        try
+        {
+            var loc = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(loc)) candidates.Add(Path.Combine(loc, "libvlc", "win-x64"));
+        }
+        catch { }
+        candidates.Add(Path.Combine(AppContext.BaseDirectory, "libvlc", "win-x64"));
+        return candidates.FirstOrDefault(d => File.Exists(Path.Combine(d, "libvlc.dll")));
     }
 }
