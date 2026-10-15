@@ -60,12 +60,12 @@ public partial class PlayerWindow : Window
             await Dispatcher.InvokeAsync(() =>
             {
                 var audioOpts = ps.Player.AudioTrackDescription
-                    .Select(t => new TrackOption(t.ID, t.Name)).ToList();
+                    .Select(t => new TrackOption(t.Id, t.Name)).ToList();
                 AudioBox.ItemsSource = audioOpts;
                 AudioBox.SelectedItem = audioOpts.FirstOrDefault(o => o.Id == ps.Player.AudioTrack);
 
                 var spuOpts = ps.Player.SpuDescription
-                    .Select(t => new TrackOption(t.ID, t.Name)).ToList();
+                    .Select(t => new TrackOption(t.Id, t.Name)).ToList();
                 SpuBox.ItemsSource = spuOpts;
                 SpuBox.SelectedItem = spuOpts.FirstOrDefault(o => o.Id == ps.Player.Spu);
             });
@@ -75,18 +75,24 @@ public partial class PlayerWindow : Window
             var tracks = ps.Player.Media?.Tracks;
             if (tracks is not null)
             {
-                var v = tracks.OfType<VideoTrack>().FirstOrDefault();
-                if (v is not null)
+                MediaTrack? video = null, audio = null;
+                foreach (var t in tracks)
                 {
-                    var fps = v.FrameRateDen > 0 ? (double)v.FrameRateNum / v.FrameRateDen : 0;
-                    tech.Append($"{FourCC(v.Codec)} {v.Width}x{v.Height}");
+                    if (t.TrackType == TrackType.Video && video is null) video = t;
+                    else if (t.TrackType == TrackType.Audio && audio is null) audio = t;
+                }
+                if (video is MediaTrack v)
+                {
+                    var vd = v.Data.Video;
+                    var fps = vd.FrameRateDen > 0 ? (double)vd.FrameRateNum / vd.FrameRateDen : 0;
+                    tech.Append($"{FourCC(v.Codec)} {vd.Width}x{vd.Height}");
                     if (fps > 0) tech.Append($" {fps:0}fps");
                 }
-                var a = tracks.OfType<AudioTrack>().FirstOrDefault();
-                if (a is not null)
+                if (audio is MediaTrack a)
                 {
+                    var ad = a.Data.Audio;
                     if (tech.Length > 0) tech.Append("  •  ");
-                    tech.Append($"{FourCC(a.Codec)} {a.Channels}ch {a.Rate / 1000.0:0.#}kHz");
+                    tech.Append($"{FourCC(a.Codec)} {ad.Channels}ch {ad.Rate / 1000.0:0.#}kHz");
                 }
             }
             await Dispatcher.InvokeAsync(() => OsdTech.Text = tech.ToString());
@@ -131,13 +137,13 @@ public partial class PlayerWindow : Window
     private void Audio_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (AudioBox.SelectedItem is TrackOption t)
-            try { PlayerService.Current.Player.AudioTrack = t.Id; } catch { }
+            try { PlayerService.Current.Player.SetAudioTrack(t.Id); } catch { }
     }
 
     private void Spu_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (SpuBox.SelectedItem is TrackOption t)
-            try { PlayerService.Current.Player.Spu = t.Id; } catch { }
+            try { PlayerService.Current.Player.SetSpu(t.Id); } catch { }
     }
 
     private sealed record TrackOption(int Id, string Name)
