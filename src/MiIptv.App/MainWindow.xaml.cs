@@ -33,7 +33,7 @@ public partial class MainWindow : Window
         {
             "settings" => new SettingsView(),
             "live" => new LiveView(),
-            "epg" => Placeholder("🗓 Guía", "Etapa 4: parrilla EPG."),
+            "epg" => new EpgView(),
             "movies" => Placeholder("🎬 Películas", "Etapa 5: catálogo VOD."),
             "series" => Placeholder("📺 Series", "Etapa 5: catálogo de series."),
             "favs" => Placeholder("⭐ Favoritos", "Etapa 6."),

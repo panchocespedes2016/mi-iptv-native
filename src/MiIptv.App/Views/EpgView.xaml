@@ -1,0 +1,23 @@
+<UserControl x:Class="MiIptv.App.Views.EpgView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="UserControl_Loaded">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+      <Button Content="◀" Click="Shift_Click" Tag="-1" MinWidth="40"/>
+      <TextBlock x:Name="WindowLabel" VerticalAlignment="Center" Margin="12,0" FontWeight="Bold"/>
+      <Button Content="▶" Click="Shift_Click" Tag="1" MinWidth="40"/>
+      <Button Content="⏺ Ahora" Click="Now_Click" Margin="8,0,0,0"/>
+    </StackPanel>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="170"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel x:Name="ChannelColumn" Grid.Column="0"/>
+        <Canvas x:Name="TimelineCanvas" Grid.Column="1" Background="#0b1016"/>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
