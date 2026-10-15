@@ -8,13 +8,11 @@
     <UseWPF>true</UseWPF>
     <Version>0.1.6</Version>
     <AssemblyName>mi-iptv-native</AssemblyName>
-    <!-- Portable: un solo .exe autocontenido -->
-    <PublishSingleFile>true</PublishSingleFile>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <!-- Portable sin instalador: carpeta con el exe + piezas de VLC al lado.
+         (single-file no funciona con las DLLs nativas de LibVLCSharp) -->
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <!-- extrae también los archivos de contenido (libvlc\) del bundle al arrancar -->
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <DebugType>none</DebugType>
   </PropertyGroup>
 
