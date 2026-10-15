@@ -18,8 +18,8 @@ public partial class App : Application
             // En single-file, las DLLs nativas se extraen a un temporal al arrancar:
             // hay que indicar la ruta explícitamente.
             var dir = FindLibVlcDir();
-            if (dir is null) Core.Initialize();
-            else Core.Initialize(dir);
+            if (dir is null) LibVLCSharp.Shared.Core.Initialize();
+            else LibVLCSharp.Shared.Core.Initialize(dir);
         }
         catch (Exception ex)
         {
