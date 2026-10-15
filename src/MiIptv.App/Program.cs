@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace MiIptv.App;
@@ -13,7 +14,13 @@ public static class Program
     [STAThread]
     public static void Main()
     {
+        File.WriteAllText(
+            Path.Combine(AppContext.BaseDirectory, "alive.log"),
+            $"Main entró {DateTime.Now:HH:mm:ss.fff}\n");
         StartupHook.Init();
+        File.AppendAllText(
+            Path.Combine(AppContext.BaseDirectory, "alive.log"),
+            $"Init volvió {DateTime.Now:HH:mm:ss.fff}\n");
         RunApp();
     }
 
