@@ -29,6 +29,17 @@ jobs:
       - name: Publicar exe portable
         run: dotnet publish src/MiIptv.App/MiIptv.App.csproj -c Release -o publish
 
+      - name: Copiar DLLs nativas de VLC
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem "$env:USERPROFILE\.nuget\packages\videolan.libvlc.windows" -Directory |
+                 Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $pkg) { throw "Paquete videolan.libvlc.windows no encontrado en NuGet" }
+          Write-Host "Paquete: $($pkg.FullName)"
+          $dst = "publish\libvlc\win-x64"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item (Join-Path $pkg.FullName "build\x64\*") -Destination $dst -Recurse -Force
+
       - name: Verificar DLLs nativas de VLC
         shell: pwsh
         run: |
