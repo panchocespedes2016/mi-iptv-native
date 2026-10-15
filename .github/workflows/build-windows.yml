@@ -29,22 +29,68 @@ jobs:
       - name: Publicar exe portable
         run: dotnet publish src/MiIptv.App/MiIptv.App.csproj -c Release -o publish
 
-      - name: Verificar bundle
+      - name: Copiar DLLs nativas de VLC
         shell: pwsh
         run: |
-          $exe = Get-Item "publish/mi-iptv-native.exe"
-          $mb = [math]::Round($exe.Length / 1MB, 1)
-          Write-Host "exe: $mb MB"
-          if ($exe.Length -lt 50MB) { throw "El bundle no incluye los contenidos (VLC): solo $mb MB" }
+          $pkg = Get-ChildItem "$env:USERPROFILE\.nuget\packages\videolan.libvlc.windows" -Directory |
+                 Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $pkg) { throw "Paquete videolan.libvlc.windows no encontrado en NuGet" }
+          $dst = "publish\libvlc\win-x64"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item (Join-Path $pkg.FullName "build\x64\*") -Destination $dst -Recurse -Force
+
+      - name: Ordenar carpeta (DLLs a libs)
+        shell: pwsh
+        run: |
+          # DLLs gestionadas -> libs\ (menos la de entrada y CoreLib, que el runtime exige al lado del exe)
+          $keep = @('mi-iptv-native.dll', 'System.Private.CoreLib.dll')
+          $moved = @{}
+          New-Item -ItemType Directory -Force -Path "publish\libs" | Out-Null
+          Get-ChildItem "publish\*.dll" | ForEach-Object {
+            if ($keep -contains $_.Name) { return }
+            $managed = $true
+            try { [void][System.Reflection.AssemblyName]::GetAssemblyName($_.FullName) } catch { $managed = $false }
+            if ($managed) { Move-Item $_.FullName "publish\libs\" -Force; $moved[$_.Name] = $true }
+          }
+          # Satélites de idioma -> libs\<cultura>\
+          Get-ChildItem "publish\" -Directory | Where-Object { $_.Name -notin @('libs','libvlc') } |
+            ForEach-Object { Move-Item $_.FullName "publish\libs\" -Force }
+          # deps.json: que el runtime busque en libs\
+          $depsPath = "publish\mi-iptv-native.deps.json"
+          $deps = Get-Content $depsPath -Raw | ConvertFrom-Json
+          foreach ($t in $deps.targets.PSObject.Properties) {
+            foreach ($l in $t.Value.PSObject.Properties) {
+              foreach ($kind in @('runtime','resources')) {
+                $assets = $l.Value.$kind
+                if (-not $assets) { continue }
+                foreach ($a in @($assets.PSObject.Properties.Name)) {
+                  if ($moved.ContainsKey([IO.Path]::GetFileName($a))) {
+                    $val = $assets.$a
+                    $assets.PSObject.Properties.Remove($a)
+                    Add-Member -InputObject $assets -NotePropertyName "libs/$a" -NotePropertyValue $val
+                  }
+                }
+              }
+            }
+          }
+          $deps | ConvertTo-Json -Depth 32 | Set-Content $depsPath -Encoding UTF8
+          Write-Host "Movidas a libs\: $($moved.Count) DLLs"
+
+      - name: Verificar carpeta portable
+        shell: pwsh
+        run: |
+          $rootFiles = @(Get-ChildItem "publish\*" -File).Count
+          $libsDlls = @(Get-ChildItem "publish\libs\*.dll").Count
+          Write-Host "Raíz: $rootFiles archivos; libs: $libsDlls DLLs"
+          if ($libsDlls -lt 30) { throw "libs\ casi vacío ($libsDlls)" }
+          if ($rootFiles -gt 30) { throw "demasiados archivos en raíz ($rootFiles)" }
+          if (-not (Test-Path "publish\libvlc\win-x64\libvlc.dll")) { throw "falta libvlc" }
+          if (-not (Test-Path "publish\mi-iptv-native.exe")) { throw "falta exe" }
 
       - name: Zip con numero de version
         shell: pwsh
         run: |
           $v = "${{ steps.bump.outputs.version }}"
-          $exe = Get-ChildItem publish/mi-iptv-native.exe | Select-Object -First 1
-          if (-not $exe) { throw "No se encontró el .exe publicado" }
-          $named = "mi-iptv-native-$v.exe"
-          Rename-Item $exe.FullName $named
           Compress-Archive -Path "publish/*" -DestinationPath "MiIptv-Native-$v-win64.zip" -Force
           Get-ChildItem "MiIptv-Native-$v-win64.zip"
 

@@ -14,9 +14,7 @@ public partial class App : Application
                 MessageBoxButton.OK, MessageBoxImage.Error);
         try
         {
-            // Motor de video VLC (nativo: todos los códecs).
-            // En single-file, las DLLs nativas se extraen a un temporal al arrancar:
-            // hay que indicar la ruta explícitamente.
+            // Motor de video VLC (nativo: todos los códecs). Va en libvlc\win-x64 junto al exe.
             var dir = FindLibVlcDir();
             if (dir is null) LibVLCSharp.Shared.Core.Initialize();
             else LibVLCSharp.Shared.Core.Initialize(dir);

@@ -9,26 +9,17 @@
     <Version>0.1.10</Version>
     <AssemblyName>mi-iptv-native</AssemblyName>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <!-- Portable sin instalador: un solo .exe autocontenido (VLC va dentro del bundle) -->
-    <PublishSingleFile>true</PublishSingleFile>
+    <!-- Portable sin instalador: carpeta con el exe; las DLLs gestionadas van
+         en la subcarpeta libs\ (las resuelve StartupHook.cs). Junto al exe
+         quedan el exe, las nativas del runtime y libvlc\. -->
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <DebugType>none</DebugType>
     <!-- El paquete VideoLAN.LibVLC.Windows no lleva sus DLLs a publish/ por sí solo:
-         desactivamos su copia automática y la declaramos explícita abajo. -->
+         desactivamos su copia automática; el workflow las copia a libvlc\. -->
     <VlcWindowsX64Enabled>false</VlcWindowsX64Enabled>
     <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Nativos de VLC dentro del bundle (el Pkg* resuelve porque es referencia directa) -->
-    <Content Include="$(PkgVideoLAN_LibVLC_Windows)\build\x64\**">
-      <Link>libvlc\win-x64\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="LibVLCSharp.WPF" Version="3.8.1" />
