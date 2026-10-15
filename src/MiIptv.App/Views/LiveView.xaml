@@ -4,26 +4,43 @@
              Loaded="UserControl_Loaded">
   <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="320"/>
+      <ColumnDefinition Width="340"/>
       <ColumnDefinition Width="*"/>
     </Grid.ColumnDefinitions>
 
     <DockPanel Grid.Column="0">
-      <TextBox x:Name="SearchBox" DockPanel.Dock="Top" TextChanged="Search_Changed"
-               Margin="4"/>
+      <TextBox x:Name="SearchBox" DockPanel.Dock="Top" TextChanged="Search_Changed" Margin="4"/>
       <ScrollViewer DockPanel.Dock="Top" MaxHeight="110" VerticalScrollBarVisibility="Auto">
         <WrapPanel x:Name="CatPanel" Margin="4"/>
       </ScrollViewer>
       <ListBox x:Name="ChannelList" SelectionChanged="Channel_Activated">
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <StackPanel Orientation="Horizontal" Margin="2">
-              <Image Source="{Binding Logo}" Width="44" Height="44" Margin="0,0,10,0"/>
+            <DockPanel Margin="2">
+              <CheckBox DockPanel.Dock="Right" IsChecked="{Binding IsFavorite, Mode=TwoWay}"
+                        VerticalAlignment="Center" Margin="6,0,2,0" ToolTip="Favorito"
+                        Checked="Fav_Changed" Unchecked="Fav_Changed">
+                <CheckBox.Template>
+                  <ControlTemplate TargetType="CheckBox">
+                    <TextBlock x:Name="Star" Text="★" FontSize="18"/>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsChecked" Value="True">
+                        <Setter TargetName="Star" Property="Foreground" Value="Gold"/>
+                      </Trigger>
+                      <Trigger Property="IsChecked" Value="False">
+                        <Setter TargetName="Star" Property="Foreground" Value="#555"/>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </CheckBox.Template>
+              </CheckBox>
+              <Image Source="{Binding Channel.Logo}" Width="44" Height="44" Margin="0,0,10,0"/>
               <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="{Binding Name}" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="220"/>
-                <TextBlock Text="{Binding Group}" Foreground="{StaticResource Muted}" FontSize="12"/>
+                <TextBlock Text="{Binding Channel.Name}" FontWeight="Bold"
+                           TextTrimming="CharacterEllipsis" MaxWidth="200"/>
+                <TextBlock Text="{Binding Channel.Group}" Foreground="{StaticResource Muted}" FontSize="12"/>
               </StackPanel>
-            </StackPanel>
+            </DockPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>

@@ -36,8 +36,8 @@ public partial class MainWindow : Window
             "epg" => new EpgView(),
             "movies" => new MoviesView(),
             "series" => new SeriesView(),
-            "favs" => Placeholder("⭐ Favoritos", "Etapa 6."),
-            "multi" => Placeholder("⊞ Multivista", "Etapa 6: 4 pantallas simultáneas."),
+            "favs" => new FavoritesView(),
+            "multi" => Placeholder("⊞ Multivista", "Etapa 6b: 4 pantallas simultáneas."),
             _ => Placeholder("MiIPTV", ""),
         };
     }

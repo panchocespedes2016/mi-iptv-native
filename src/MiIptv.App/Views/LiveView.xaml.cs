@@ -10,7 +10,7 @@ namespace MiIptv.App.Views;
 
 public partial class LiveView : UserControl
 {
-    private List<ChannelItem> _all = new();          // m3u: todo parseado
+    private List<ChannelRow> _all = new();            // m3u: todo parseado
     private List<(string Id, string Name)> _cats = new();
     private string? _activeCat;
     private bool _loaded;
@@ -52,7 +52,10 @@ public partial class LiveView : UserControl
                 var parsed = M3UParser.Parse(text);
                 var groups = parsed.Select(c => c.Group ?? "Sin grupo").Distinct().ToList();
                 _cats = groups.Select((g, i) => ($"g{i}:{g}", g)).ToList();
-                _all = parsed.Select((c, i) => new ChannelItem($"m3u:{i}", c.Name, c.Logo, c.Group, c.Url)).ToList();
+                var favs2 = AppState.Current.Favorites;
+                _all = parsed.Select((c, i) => new ChannelRow(new ChannelItem(
+                    $"m3u_{i}", c.Name, c.Logo, c.Group, c.Url),
+                    favs2.Contains($"m3u_{i}"))).ToList();
                 BuildCatButtons();
                 ApplyFilter();
             }
@@ -65,8 +68,10 @@ public partial class LiveView : UserControl
     {
         var st = AppState.Current;
         var streams = await st.Xtream!.GetLiveStreamsAsync(catId);
-        _all = streams.Select(s => new ChannelItem(
-            $"xt:{s.StreamId}", s.Name, s.StreamIcon, null, st.Xtream.LiveUrl(s.StreamId))).ToList();
+        var favs = AppState.Current.Favorites;
+        _all = streams.Select(s => new ChannelRow(new ChannelItem(
+            $"xt_{s.StreamId}", s.Name, s.StreamIcon, null, st.Xtream.LiveUrl(s.StreamId)),
+            favs.Contains($"xt_{s.StreamId}"))).ToList();
         ApplyFilter();
     }
 
@@ -118,20 +123,33 @@ public partial class LiveView : UserControl
         if (_activeCat is not null && AppState.Current.ActiveProfile?.Type == "m3u")
         {
             var catName = _cats.FirstOrDefault(c => c.Id == _activeCat).Name;
-            list = list.Where(c => c.Group == catName);
+            list = list.Where(r => r.Channel.Group == catName);
         }
-        if (q.Length > 0) list = list.Where(c => c.Name.ToLowerInvariant().Contains(q));
+        if (q.Length > 0) list = list.Where(r => r.Channel.Name.ToLowerInvariant().Contains(q));
         ChannelList.ItemsSource = list.Take(500).ToList();
+    }
+
+    private static int? ParseXtId(string id) =>
+        id.StartsWith("xt_") && int.TryParse(id[3..], out var n) ? n : null;
+
+    private void Fav_Changed(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox cb || cb.DataContext is not ChannelRow row) return;
+        var favs = AppState.Current.Favorites;
+        if (row.IsFavorite) favs.Add(row.Channel.Id);
+        else favs.Remove(row.Channel.Id);
+        AppState.Current.Save();
     }
 
     private void Channel_Activated(object sender, SelectionChangedEventArgs e)
     {
-        if (ChannelList.SelectedItem is not ChannelItem ch) return;
+        if (ChannelList.SelectedItem is not ChannelRow row) return;
         ChannelList.SelectedItem = null;
+        var ch = row.Channel;
         try
         {
             PlayerService.Current.Play(ch.Url, ch.Name);
-            new PlayerWindow(ch.Name).Show();
+            new PlayerWindow(ch.Name, ParseXtId(ch.Id)).Show();
         }
         catch (Exception ex)
         {

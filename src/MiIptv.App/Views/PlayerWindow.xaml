@@ -15,13 +15,34 @@
       </DockPanel>
     </Border>
 
+    <!-- OSD: programa actual/siguiente + datos técnicos -->
+    <Border x:Name="OsdPanel" HorizontalAlignment="Left" VerticalAlignment="Top"
+            Margin="12,64,0,0" Background="#DD000000" CornerRadius="8"
+            Padding="12,10" MaxWidth="420" Visibility="Collapsed">
+      <StackPanel>
+        <TextBlock x:Name="OsdTitle" FontSize="15" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+        <TextBlock x:Name="OsdNow" Foreground="White" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        <ProgressBar x:Name="OsdProgress" Height="6" Margin="0,4,0,0" Minimum="0" Maximum="100"/>
+        <TextBlock x:Name="OsdNext" Foreground="#aaa" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+        <TextBlock x:Name="OsdDesc" Foreground="#ccc" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        <TextBlock x:Name="OsdTech" Foreground="#888" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
+      </StackPanel>
+    </Border>
+
     <Border x:Name="BottomBar" VerticalAlignment="Bottom" Background="#CC000000" Padding="12,8">
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
         <Button x:Name="PlayPauseBtn" Content="⏸" Click="PlayPause_Click" FontSize="16" MinWidth="48"/>
         <Button Content="⏹" Click="Stop_Click" FontSize="16" MinWidth="48"/>
+        <Button x:Name="OsdBtn" Content="ⓘ" Click="Osd_Click" FontSize="16" MinWidth="48"/>
         <TextBlock Text="🔊" VerticalAlignment="Center" Margin="12,0,4,0" Foreground="White"/>
-        <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="100" Width="140"
+        <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="100" Width="110"
                 VerticalAlignment="Center" ValueChanged="Volume_Changed"/>
+        <TextBlock Text="🎧" VerticalAlignment="Center" Margin="12,0,4,0" Foreground="White"/>
+        <ComboBox x:Name="AudioBox" MinWidth="90" MaxWidth="170" VerticalAlignment="Center"
+                  SelectionChanged="Audio_Changed"/>
+        <TextBlock Text="💬" VerticalAlignment="Center" Margin="12,0,4,0" Foreground="White"/>
+        <ComboBox x:Name="SpuBox" MinWidth="90" MaxWidth="170" VerticalAlignment="Center"
+                  SelectionChanged="Spu_Changed"/>
         <Button Content="⛶" Click="Fullscreen_Click" FontSize="16" MinWidth="48" Margin="12,0,0,0"/>
       </StackPanel>
     </Border>
