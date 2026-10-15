@@ -42,11 +42,12 @@ jobs:
       - name: Ordenar carpeta (DLLs a libs)
         shell: pwsh
         run: |
-          # Todo *.dll -> libs\, MENOS lo que el arranque del runtime exige al lado del exe:
+          # Todo *.dll -> libs\, MENOS lo que el arranque exige al lado del exe:
           # - mi-iptv-native.dll: la busca el exe por nombre
           # - System.Private.CoreLib.dll: se necesita antes de que corra código gestionado
+          # - System.Runtime.dll: el runtime la pide antes de que corra StartupHook.Init
           # - hostfxr/hostpolicy/coreclr/clrjit/clrgc/clretwrc: cadena del host nativo
-          $keep = @('mi-iptv-native.dll','System.Private.CoreLib.dll',
+          $keep = @('mi-iptv-native.dll','System.Private.CoreLib.dll','System.Runtime.dll',
                     'hostfxr.dll','hostpolicy.dll','coreclr.dll','clrjit.dll','clrgc.dll','clretwrc.dll')
           $moved = @{}
           New-Item -ItemType Directory -Force -Path "publish\libs" | Out-Null

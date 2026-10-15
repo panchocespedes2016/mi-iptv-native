@@ -20,7 +20,7 @@ internal static class StartupHook
 {
     private static string? _log;
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr LoadLibraryNative(string lpFileName);
 
     internal static void Init()
