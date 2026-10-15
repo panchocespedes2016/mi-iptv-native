@@ -1,0 +1,55 @@
+<UserControl x:Class="MiIptv.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <StackPanel Margin="8" MaxWidth="900">
+    <TextBlock Text="Ajustes" FontSize="24" FontWeight="Bold" Margin="0,0,0,12"/>
+
+    <TextBlock Text="Perfiles" FontSize="16" FontWeight="Bold" Margin="0,0,0,6"/>
+    <ListBox x:Name="ProfileList" Height="120" SelectionChanged="ProfileList_SelectionChanged"/>
+    <WrapPanel Margin="0,6,0,12">
+      <Button Content="＋ Nuevo" Click="New_Click"/>
+      <Button Content="✓ Activar" Click="Activate_Click"/>
+      <Button Content="🗑 Eliminar" Click="Delete_Click"/>
+    </WrapPanel>
+
+    <StackPanel x:Name="FormPanel" Visibility="Collapsed">
+      <TextBlock Text="Nombre" Foreground="{StaticResource Muted}"/>
+      <TextBox x:Name="FName"/>
+      <TextBlock Text="Tipo" Foreground="{StaticResource Muted}"/>
+      <ComboBox x:Name="FType" SelectionChanged="FType_SelectionChanged" Margin="4">
+        <ComboBoxItem Content="xtream" IsSelected="True"/>
+        <ComboBoxItem Content="m3u"/>
+      </ComboBox>
+      <StackPanel x:Name="XtreamFields">
+        <TextBlock Text="Host (http://proveedor.tv:8080)" Foreground="{StaticResource Muted}"/>
+        <TextBox x:Name="FHost"/>
+        <TextBlock Text="Usuario" Foreground="{StaticResource Muted}"/>
+        <TextBox x:Name="FUser"/>
+        <TextBlock Text="Contraseña" Foreground="{StaticResource Muted}"/>
+        <PasswordBox x:Name="FPass" Margin="4" Background="{StaticResource Panel}"
+                     Foreground="{StaticResource Fg}" BorderBrush="#2c3947" Padding="10,8"/>
+      </StackPanel>
+      <StackPanel x:Name="M3uFields" Visibility="Collapsed">
+        <TextBlock Text="URL de la lista (opcional si cargas archivo)" Foreground="{StaticResource Muted}"/>
+        <TextBox x:Name="FUrl"/>
+        <WrapPanel>
+          <Button Content="📁 Cargar archivo…" Click="LoadFile_Click"/>
+          <TextBlock x:Name="FileLabel" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+        </WrapPanel>
+      </StackPanel>
+      <WrapPanel Margin="0,8,0,0">
+        <Button Content="💾 Guardar" Click="Save_Click"/>
+        <Button Content="🔌 Probar conexión" Click="Test_Click"/>
+        <Button Content="Cancelar" Click="Cancel_Click"/>
+      </WrapPanel>
+      <TextBlock x:Name="TestResult" Margin="4" TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <TextBlock Text="Timeshift en vivo" FontSize="16" FontWeight="Bold" Margin="0,16,0,6"/>
+    <TextBlock Text="Pausar el directo y volver atrás (motor VLC)." Foreground="{StaticResource Muted}"/>
+    <ComboBox x:Name="TimeshiftBox" SelectionChanged="Timeshift_Changed"
+              Margin="4" MaxWidth="300" HorizontalAlignment="Left"/>
+  </StackPanel>
+  </ScrollViewer>
+</UserControl>

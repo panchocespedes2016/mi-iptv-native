@@ -1,37 +1,52 @@
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using MiIptv.Core;
+using System.Windows.Media;
+using MiIptv.App.Services;
+using MiIptv.App.Views;
 
 namespace MiIptv.App;
 
 public partial class MainWindow : Window
 {
-    private readonly AppConfig _config = AppConfig.Load();
-
     public MainWindow()
     {
         InitializeComponent();
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         VersionLabel.Text = "v" + (v is null ? "?" : $"{v.Major}.{v.Minor}.{v.Build}");
-        ShowPlaceholder("live", "📡 TV en vivo");
+        UpdateSourceLabel();
+        Navigate("live");
     }
+
+    private void UpdateSourceLabel() =>
+        SourceLabel.Text = "Fuente: " + (AppState.Current.ActiveProfile?.Name ?? "—");
 
     private void Nav_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button b) return;
-        var tag = b.Tag as string ?? "";
-        ShowPlaceholder(tag, b.Content as string ?? tag);
+        if (sender is Button b) Navigate(b.Tag as string ?? "");
     }
 
-    private void ShowPlaceholder(string tag, string title)
+    private void Navigate(string tag)
     {
-        MainContent.Content = new TextBlock
+        UpdateSourceLabel();
+        MainContent.Content = tag switch
         {
-            Text = $"{title}\n\nEn construcción (etapa 1: esqueleto + motor VLC).",
-            FontSize = 18,
-            Foreground = (System.Windows.Media.Brush)FindResource("Muted"),
-            Margin = new Thickness(24),
+            "settings" => new SettingsView(),
+            "live" => Placeholder("📡 TV en vivo", "Etapa 3: lista de canales + reproductor VLC."),
+            "epg" => Placeholder("🗓 Guía", "Etapa 4: parrilla EPG."),
+            "movies" => Placeholder("🎬 Películas", "Etapa 5: catálogo VOD."),
+            "series" => Placeholder("📺 Series", "Etapa 5: catálogo de series."),
+            "favs" => Placeholder("⭐ Favoritos", "Etapa 6."),
+            "multi" => Placeholder("⊞ Multivista", "Etapa 6: 4 pantallas simultáneas."),
+            _ => Placeholder("MiIPTV", ""),
         };
     }
+
+    private static TextBlock Placeholder(string title, string sub) => new()
+    {
+        Text = $"{title}\n\n{sub}",
+        FontSize = 18,
+        Foreground = Brushes.Gray,
+        Margin = new Thickness(24),
+    };
 }
