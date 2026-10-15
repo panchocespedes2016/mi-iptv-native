@@ -143,7 +143,7 @@ public sealed class XtreamClient
         var sign = off.StartsWith('-') ? -1 : 1;
         var digits = new string(off.Where(char.IsDigit).ToArray()).PadRight(4, '0');
         var oh = int.Parse(digits[..2]); var om = int.Parse(digits[2..4]);
-        dto = new DateTimeOffset(baseDt, TimeSpan.FromMinutes(sign * (oh * 60 + om)));
+        dto = new DateTimeOffset(baseDt.Ticks, TimeSpan.FromMinutes(sign * (oh * 60 + om)));
         return true;
     }
 }
