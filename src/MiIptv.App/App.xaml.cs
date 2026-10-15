@@ -8,7 +8,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         // Motor de video VLC (nativo: todos los códecs)
-        Core.Initialize();
+        LibVLCSharp.Shared.Core.Initialize();
         base.OnStartup(e);
     }
 }
