@@ -30,7 +30,7 @@ public partial class PlayerWindow : Window
     }
 
     private void UpdatePlayPause() =>
-        Dispatcher.Invoke(() => PlayPauseBtn.Content = PlayerService.Current.Player.IsPlaying() ? "⏸" : "▶");
+        Dispatcher.Invoke(() => PlayPauseBtn.Content = PlayerService.Current.Player.IsPlaying ? "⏸" : "▶");
 
     private void ShowBars(bool show)
     {

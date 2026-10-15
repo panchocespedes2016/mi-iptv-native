@@ -34,7 +34,7 @@ public sealed class PlayerService
 
     public void TogglePlayPause()
     {
-        if (Player.IsPlaying()) Player.Pause();
+        if (Player.IsPlaying) Player.Pause();
         else Player.Play();
     }
 
